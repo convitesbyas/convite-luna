@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#073b58">
+<title>Luna • 10 anos | Convite Surpresa</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;min-height:100%;background:#073b58;font-family:Arial,sans-serif}
+body{min-height:100dvh;display:grid;place-items:center;overflow-x:hidden}
+/* Área vertical 9:16: no computador fica centralizada, no celular cabe inteira */
+.stage{position:relative;width:min(100vw,56.25dvh,540px);aspect-ratio:9/16;overflow:hidden;background:#073b58}
+.screen{position:absolute;inset:0;display:none;align-items:center;justify-content:center}
+.screen.active{display:flex}
+.art,.movie{display:block;width:100%;height:100%;object-fit:contain}
+.tap{position:absolute;border:0;background:transparent;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.tap:focus-visible{outline:3px solid #073b58;outline-offset:-3px;border-radius:10px;background:#ffffff33}
+.full{inset:0;width:100%;height:100%}
+/* Percentuais relativos à arte de 1080 × 1920 */
+.map{left:5%;top:34.5%;width:90%;height:12%}
+.rsvp{left:5%;top:49%;width:90%;height:11%}
+.gifts{left:62%;top:74%;width:36%;height:20%}
+.back{position:absolute;top:1.5%;left:3%;padding:11px 16px;background:#073b58;color:white;border:1px solid #ffffff66;border-radius:30px;font-weight:700;font-size:14px;box-shadow:0 3px 12px #0005;cursor:pointer}
+.notice{display:none;position:fixed;z-index:20;left:12px;right:12px;bottom:16px;max-width:450px;margin:auto;background:white;color:#073b58;padding:16px 45px 16px 16px;border-radius:12px;box-shadow:0 6px 22px #0007;font-size:14px}
+.notice button{position:absolute;right:10px;top:9px;background:#073b58;color:white;border:0;border-radius:8px;padding:6px 10px;cursor:pointer}
+@media(max-width:600px){.back{font-size:13px;padding:9px 13px}}
+</style>
+</head>
+<body>
+<main class="stage" aria-label="Convite da Luna">
+<section class="screen active" id="cover" aria-label="Envelope do convite">
+<img class="art" src="envelope.png" alt="Envelope do convite surpresa da Luna">
+<button class="tap full" id="open" aria-label="Abrir o envelope e iniciar a animação"></button>
+</section>
+<section class="screen" id="movie" aria-label="Animação de abertura">
+<video class="movie" id="openingVideo" playsinline webkit-playsinline preload="metadata"><source src="abertura.mp4" type="video/mp4">Seu navegador não suporta vídeos MP4.</video>
+</section>
+<section class="screen" id="info" aria-label="Informações da festa">
+<img class="art" src="informacoes.png" alt="Luna 10 anos. 26 de dezembro às 14h. Espaço Tiapira, Rua Tiapira, 320, Realengo. Confirme presença e veja sugestões de presentes.">
+<a class="tap map" href="https://www.google.com/maps/search/?api=1&amp;query=Espa%C3%A7o%20Tiapira%20Rua%20Tiapira%20320%20Realengo%20Rio%20de%20Janeiro" target="_blank" rel="noopener noreferrer" aria-label="Ver endereço no Google Maps"></a>
+<button class="tap rsvp" id="rsvp" aria-label="Confirmar presença no WhatsApp"></button>
+<button class="tap gifts" id="gifts" aria-label="Abrir sugestões de presentes"></button>
+</section>
+<section class="screen" id="presents" aria-label="Sugestões de presentes">
+<img class="art" src="presentes.png" alt="Sugestões: roupas tamanho 10 ou 12 anos, calçados 31 ou 32. Luna não gosta muito da cor rosa nem de bonecas.">
+<button class="back" id="back" aria-label="Voltar às informações">← Voltar</button>
+</section>
+</main>
+<div class="notice" id="notice" role="alert"><button id="closeNotice" aria-label="Fechar">×</button><span id="noticeText"></span></div>
+<script>
+'use strict';
+// Configure aqui o WhatsApp que receberá as confirmações: 55 + DDD + número.
+// Exemplo fictício: '5521999999999'. Deixe vazio enquanto não tiver o número.
+const whatsappNumero = '5521966465335';
+const screens = [...document.querySelectorAll('.screen')];
+const video = document.getElementById('openingVideo');
+function show(id){screens.forEach(s=>s.classList.toggle('active',s.id===id));}
+function warn(msg){document.getElementById('noticeText').textContent=msg;document.getElementById('notice').style.display='block';}
+document.getElementById('closeNotice').addEventListener('click',()=>document.getElementById('notice').style.display='none');
+document.getElementById('open').addEventListener('click',()=>{
+  show('movie'); video.currentTime=0;
+  const playing=video.play();
+  if(playing && typeof playing.catch==='function') playing.catch(()=>{video.controls=true;warn('Toque no botão de reproduzir para iniciar o vídeo.');});
+});
+video.addEventListener('ended',()=>{video.controls=false;show('info');});
+video.addEventListener('error',()=>warn('Não foi possível carregar abertura.mp4. Confira se está na mesma pasta do HTML.'));
+document.getElementById('gifts').addEventListener('click',()=>show('presents'));
+document.getElementById('back').addEventListener('click',()=>show('info'));
+document.getElementById('rsvp').addEventListener('click',()=>{
+ if(!/^\d{12,13}$/.test(whatsappNumero)){warn('O WhatsApp de confirmação ainda não foi configurado no HTML.');return;}
+ const msg='Olá! 💙 Gostaria de confirmar minha presença na festa dia 26/12, às 14h! 🎉🤫';
+ window.open('https://wa.me/'+whatsappNumero+'?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');
+});
+for(const [id,name] of [['cover','envelope.png'],['info','informacoes.png'],['presents','presentes.png']]){
+ document.querySelector('#'+id+' img').addEventListener('error',()=>warn('Não foi possível carregar '+name+'. Confira o nome exato e se está na mesma pasta do HTML.'));
+}
+</script>
+</body>
+</html>
