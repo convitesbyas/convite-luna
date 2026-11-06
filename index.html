@@ -22,6 +22,8 @@ body{min-height:100dvh;display:grid;place-items:center;overflow-x:hidden}
 .rsvp{left:5%;top:49%;width:90%;height:11%}
 .gifts{left:62%;top:74%;width:36%;height:20%}
 .back{position:absolute;top:1.5%;left:3%;padding:11px 16px;background:#073b58;color:white;border:1px solid #ffffff66;border-radius:30px;font-weight:700;font-size:14px;box-shadow:0 3px 12px #0005;cursor:pointer}
+.sound-toggle{position:absolute;z-index:10;right:3%;top:2%;background:#073b58e8;color:#fff;border:1px solid #ffffff99;border-radius:22px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;display:none}
+.sound-toggle.visible{display:block}
 .notice{display:none;position:fixed;z-index:20;left:12px;right:12px;bottom:16px;max-width:450px;margin:auto;background:white;color:#073b58;padding:16px 45px 16px 16px;border-radius:12px;box-shadow:0 6px 22px #0007;font-size:14px}
 .notice button{position:absolute;right:10px;top:9px;background:#073b58;color:white;border:0;border-radius:8px;padding:6px 10px;cursor:pointer}
 @media(max-width:600px){.back{font-size:13px;padding:9px 13px}}
@@ -46,6 +48,8 @@ body{min-height:100dvh;display:grid;place-items:center;overflow-x:hidden}
 <img class="art" src="presentes.png" alt="Sugestões: roupas tamanho 10 ou 12 anos, calçados 31 ou 32. Luna não gosta muito da cor rosa nem de bonecas.">
 <button class="back" id="back" aria-label="Voltar às informações">← Voltar</button>
 </section>
+<button class="sound-toggle" id="soundToggle" type="button" aria-label="Desativar música" aria-pressed="true">🔊 Música</button>
+<audio id="backgroundMusic" src="musica_luna.m4a" preload="auto" loop></audio>
 </main>
 <div class="notice" id="notice" role="alert"><button id="closeNotice" aria-label="Fechar">×</button><span id="noticeText"></span></div>
 <script>
@@ -55,15 +59,35 @@ body{min-height:100dvh;display:grid;place-items:center;overflow-x:hidden}
 const whatsappNumero = '5521966465335';
 const screens = [...document.querySelectorAll('.screen')];
 const video = document.getElementById('openingVideo');
+const music = document.getElementById('backgroundMusic');
+const soundToggle = document.getElementById('soundToggle');
+let soundOn = true;
+video.muted = false; // O vídeo mantém seu som original; a música começa só depois
+function updateSound(){
+ soundToggle.textContent = soundOn ? '🔊 Música' : '🔇 Música';
+ soundToggle.setAttribute('aria-label', soundOn ? 'Desativar música' : 'Ativar música');
+ soundToggle.setAttribute('aria-pressed', String(soundOn));
+ music.muted = !soundOn;
+}
+soundToggle.addEventListener('click',()=>{soundOn=!soundOn;updateSound();if(soundOn && music.paused) music.play().catch(()=>warn('Toque novamente para ativar a música.'));});
+music.addEventListener('error',()=>warn('Não foi possível carregar musica_luna.m4a. Envie esse arquivo junto com o HTML.'));
+updateSound();
 function show(id){screens.forEach(s=>s.classList.toggle('active',s.id===id));}
 function warn(msg){document.getElementById('noticeText').textContent=msg;document.getElementById('notice').style.display='block';}
 document.getElementById('closeNotice').addEventListener('click',()=>document.getElementById('notice').style.display='none');
 document.getElementById('open').addEventListener('click',()=>{
-  show('movie'); video.currentTime=0;
+  show('movie'); video.currentTime=0; music.currentTime=0;
+  // Música ainda não toca: aguarda o fim da animação.
   const playing=video.play();
   if(playing && typeof playing.catch==='function') playing.catch(()=>{video.controls=true;warn('Toque no botão de reproduzir para iniciar o vídeo.');});
 });
-video.addEventListener('ended',()=>{video.controls=false;show('info');});
+video.addEventListener('ended',()=>{
+  video.controls=false; show('info'); soundToggle.classList.add('visible');
+  if(soundOn) music.play().catch(()=>{
+    soundOn=false; updateSound();
+    warn('O navegador bloqueou o início automático da música. Toque em 🔇 Música para ativá-la.');
+  });
+});
 video.addEventListener('error',()=>warn('Não foi possível carregar abertura.mp4. Confira se está na mesma pasta do HTML.'));
 document.getElementById('gifts').addEventListener('click',()=>show('presents'));
 document.getElementById('back').addEventListener('click',()=>show('info'));
